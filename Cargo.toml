@@ -1,0 +1,17 @@
+[package]
+name = "git-extend"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "git-get"
+path = "src/bin/git-get.rs"
+
+[[bin]]
+name = "git-list"
+path = "src/bin/git-list.rs"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+gix = { version = "0.64", default-features = false, features = ["blocking-network-client"] }
+anyhow = "1.0"
