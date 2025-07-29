@@ -91,8 +91,7 @@ fn get_clone_path(repo_info: &RepoInfo, base_dir: &str, skip_host: bool) -> Path
         path.push(&repo_info.host);
     }
 
-    path.push(&repo_info.owner);
-    path.push(&repo_info.name);
+    path.extend([&repo_info.owner, &repo_info.name]);
     path
 }
 
