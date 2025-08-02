@@ -11,6 +11,14 @@ path = "src/bin/git-get.rs"
 name = "git-list"
 path = "src/bin/git-list.rs"
 
+[[bin]]
+name = "git-new"
+path = "src/bin/git-new.rs"
+
+[[bin]]
+name = "git-desc"
+path = "src/bin/git-desc.rs"
+
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
 gix = { version = "0.73" }
