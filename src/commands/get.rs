@@ -58,18 +58,12 @@ pub fn execute_dump(dump_file: &str, config: &Config) -> Result<()> {
             continue;
         }
 
-        let parts: Vec<&str> = line.split_whitespace().collect();
-        if parts.is_empty() {
-            continue;
-        }
-
-        let url = parts[0];
+        let mut parts = line.split_whitespace();
+        let Some(url) = parts.next() else { continue };
+        
         let config_clone = Config {
             base_dir: config.base_dir.clone(),
-            branch: parts
-                .get(1)
-                .map(|s| s.to_string())
-                .or_else(|| config.branch.clone()),
+            branch: parts.next().map(|s| s.to_string()).or_else(|| config.branch.clone()),
             default_host: config.default_host.clone(),
             default_scheme: config.default_scheme.clone(),
             skip_host: config.skip_host,
@@ -99,10 +93,6 @@ fn build_url(repo_info: &RepoInfo, scheme: &str) -> String {
     match scheme {
         "ssh" => format!(
             "git@{}:{}/{}.git",
-            repo_info.host, repo_info.owner, repo_info.name
-        ),
-        "https" => format!(
-            "https://{}/{}/{}.git",
             repo_info.host, repo_info.owner, repo_info.name
         ),
         _ => format!(
