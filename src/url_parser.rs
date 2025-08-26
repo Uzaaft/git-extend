@@ -50,15 +50,12 @@ fn parse_https_url(url: &str) -> Result<RepoInfo> {
     let url = url
         .trim_start_matches("https://")
         .trim_start_matches("http://");
-    let parts: Vec<&str> = url.split('/').collect();
-
-    if parts.len() < 3 {
-        return Err(anyhow::anyhow!("Invalid HTTPS URL format"));
-    }
-
-    let host = parts[0];
-    let owner = parts[1];
-    let name = parts[2].trim_end_matches(".git");
+    
+    let mut parts = url.splitn(3, '/');
+    let host = parts.next().ok_or_else(|| anyhow::anyhow!("Invalid HTTPS URL format"))?;
+    let owner = parts.next().ok_or_else(|| anyhow::anyhow!("Invalid HTTPS URL format"))?;
+    let name = parts.next().ok_or_else(|| anyhow::anyhow!("Invalid HTTPS URL format"))?;
+    let name = name.split('/').next().unwrap_or(name).trim_end_matches(".git");
 
     Ok(RepoInfo {
         host: host.to_string(),
@@ -70,21 +67,9 @@ fn parse_https_url(url: &str) -> Result<RepoInfo> {
 
 fn parse_ssh_url(url: &str) -> Result<RepoInfo> {
     let url = url.trim_start_matches("git@");
-    let parts: Vec<&str> = url.split(':').collect();
-
-    if parts.len() != 2 {
-        return Err(anyhow::anyhow!("Invalid SSH URL format"));
-    }
-
-    let host = parts[0];
-    let path_parts: Vec<&str> = parts[1].split('/').collect();
-
-    if path_parts.len() != 2 {
-        return Err(anyhow::anyhow!("Invalid SSH URL path format"));
-    }
-
-    let owner = path_parts[0];
-    let name = path_parts[1].trim_end_matches(".git");
+    let (host, path) = url.split_once(':').ok_or_else(|| anyhow::anyhow!("Invalid SSH URL format"))?;
+    let (owner, name) = path.split_once('/').ok_or_else(|| anyhow::anyhow!("Invalid SSH URL path format"))?;
+    let name = name.trim_end_matches(".git");
 
     Ok(RepoInfo {
         host: host.to_string(),
@@ -95,33 +80,23 @@ fn parse_ssh_url(url: &str) -> Result<RepoInfo> {
 }
 
 fn parse_short_url(url: &str) -> Result<RepoInfo> {
-    let parts: Vec<&str> = url.split('/').collect();
-
-    if parts.len() != 2 {
-        return Err(anyhow::anyhow!("Invalid short URL format"));
-    }
-
-    let owner = parts[0];
-    let name = parts[1].trim_end_matches(".git");
+    let (owner, name) = url.split_once('/').ok_or_else(|| anyhow::anyhow!("Invalid short URL format"))?;
+    let name = name.trim_end_matches(".git");
 
     Ok(RepoInfo {
-        host: String::new(), // Let the caller set the default host
+        host: String::new(),
         owner: owner.to_string(),
         name: name.to_string(),
-        full_url: String::new(), // Let the caller build the URL based on scheme
+        full_url: String::new(),
     })
 }
 
 fn parse_host_url(url: &str) -> Result<RepoInfo> {
-    let parts: Vec<&str> = url.split('/').collect();
-
-    if parts.len() < 3 {
-        return Err(anyhow::anyhow!("Invalid host URL format"));
-    }
-
-    let host = parts[0];
-    let owner = parts[1];
-    let name = parts[2].trim_end_matches(".git");
+    let mut parts = url.splitn(3, '/');
+    let host = parts.next().ok_or_else(|| anyhow::anyhow!("Invalid host URL format"))?;
+    let owner = parts.next().ok_or_else(|| anyhow::anyhow!("Invalid host URL format"))?;
+    let name = parts.next().ok_or_else(|| anyhow::anyhow!("Invalid host URL format"))?;
+    let name = name.split('/').next().unwrap_or(name).trim_end_matches(".git");
 
     Ok(RepoInfo {
         host: host.to_string(),
