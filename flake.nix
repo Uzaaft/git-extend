@@ -1,10 +1,9 @@
 {
-  description = "A very basic rust flake";
+  description = "git-extend - Git repository management utilities";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable"; # We want to use packages from the binary cache
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    # Rust overlay
     rust-overlay.url = "github:oxalica/rust-overlay";
   };
 
@@ -24,18 +23,63 @@
       pkgs = import nixpkgs {
         inherit system overlays;
       };
+      
+      rustToolchain = pkgs.rust-bin.stable.latest.default;
+      
+      git-extend = pkgs.rustPlatform.buildRustPackage {
+        pname = "git-extend";
+        version = "0.1.0";
+        
+        src = ./.;
+        
+        cargoLock = {
+          lockFile = ./Cargo.lock;
+        };
+        
+        buildInputs = with pkgs; lib.optionals stdenv.isDarwin [
+          darwin.apple_sdk.frameworks.Security
+          darwin.apple_sdk.frameworks.SystemConfiguration
+        ];
+        
+        meta = with pkgs.lib; {
+          description = "Git repository management utilities";
+          homepage = "https://github.com/uzaaft/git-extend";
+          license = licenses.mit;
+          maintainers = [];
+        };
+      };
     in {
-      # For `nix build` & `nix run`:
       packages = {
-        inherit (pkgs) rust-toolchain;
+        default = git-extend;
+        git-extend = git-extend;
       };
 
-      devShell = pkgs.mkShell {
-        packages = [];
+      apps = {
+        default = {
+          type = "app";
+          program = "${git-extend}/bin/git-get";
+        };
+        git-get = {
+          type = "app";
+          program = "${git-extend}/bin/git-get";
+        };
+        git-list = {
+          type = "app";
+          program = "${git-extend}/bin/git-list";
+        };
+      };
 
+      devShells.default = pkgs.mkShell {
         buildInputs = with pkgs; [
-          rust-bin.stable.latest.default
+          rustToolchain
+          pkg-config
+          openssl
+        ] ++ lib.optionals stdenv.isDarwin [
+          darwin.apple_sdk.frameworks.Security
+          darwin.apple_sdk.frameworks.SystemConfiguration
         ];
+        
+        RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
       };
     });
 }
