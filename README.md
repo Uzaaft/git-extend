@@ -1,2 +1,2 @@
-# git-extend-
-A repository of useful git extensions 
+# git-extend
+A git-get and git-list clone written in rust. 
